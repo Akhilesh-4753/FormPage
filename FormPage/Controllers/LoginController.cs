@@ -52,23 +52,25 @@ namespace FormPage.Controllers
         {
             try
             {
-                string connectionString = "Server=localhost\\SQLEXPRESS02;Database=USERS_DB; integrated security=SSPI ;TrustServerCertificate=True;"; 
+                string connectionString = "Server=localhost\\SQLEXPRESS02;Database=USERS_DB; integrated security=SSPI ;TrustServerCertificate=True;";
 
                 using (SqlConnection connection = new SqlConnection(connectionString))
                 {
-                    connection.Open(); 
+                    connection.Open();
 
                     string sqls = "SELECT COUNT(*) FROM USERS WHERE PASSWORD = @Password AND EMAIL = @Email";
-                    SqlCommand sqlCommand = new SqlCommand(sqls, connection); 
+                    SqlCommand sqlCommand = new SqlCommand(sqls, connection);
                     sqlCommand.Parameters.AddWithValue("@Password", bodyData.Password);
                     sqlCommand.Parameters.AddWithValue("@Email", bodyData.Email);
 
                     bool success = Convert.ToBoolean(sqlCommand.ExecuteScalar()); // FOR single value execute
                     if (success)
                     {
-                        return Ok("user Login successfull");
+                        return Ok(new { message = "user Login successfull", isSuccess = true });
+                        // return Ok("user Login successfull");
                     }
-                    return BadRequest("failed");
+                    return BadRequest(new { message = "invalid credentials", isSuccess = false });
+                    // return BadRequest("failed");
                 }
             }
             catch (Exception ex)
