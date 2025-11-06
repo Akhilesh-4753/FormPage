@@ -6,76 +6,63 @@ namespace FormPage.Controllers
 {
     public class LoginController : Controller
     {
-        public IActionResult LoginForm()
-        {
-            return View();
-        }
+        public IActionResult LoginForm() => View();
+        public IActionResult SignUp() => View();
 
-        public IActionResult SignUp()
-        {
-            return View();
-        }
+        private readonly string connectionString =
+            "Server=localhost\\SQLEXPRESS02;Database=USERS_DB;Integrated Security=SSPI;TrustServerCertificate=True;";
 
         [HttpPost("register")]
-        public IActionResult Register([FromBody] Register bodyData) // Register is a type like object. if we type object we cant map the body data
+        public IActionResult Register([FromBody] Register bodyData)
         {
             try
             {
-                string connectionString = "Server=localhost\\SQLEXPRESS02;Database=USERS_DB; integrated security=SSPI ;TrustServerCertificate=True;"; // Database aayi connection string
-
-                using (SqlConnection connection = new SqlConnection(connectionString)) // FOR connect to database
+                using (SqlConnection con = new SqlConnection(connectionString))
                 {
-                    connection.Open(); // just open the connection
+                    con.Open();
+                    string query = "INSERT INTO USERS (USERNAME, PASSWORD, EMAIL) VALUES (@Name, @Password, @Email)";
+                    SqlCommand cmd = new SqlCommand(query, con);
 
-                    string sqls = "INSERT INTO USERS(USERNAME, PASSWORD, EMAIL) VALUES(@Name, @Password, @Email)"; // must add @ and add any name
-                    SqlCommand sqlCommand = new SqlCommand(sqls, connection); // sqls, connection pass cheythale query execute cheyyullu so we need sql command ( tools -> nuget -> manage sql solution -> then browser -> microsoft sql client
-                    sqlCommand.Parameters.AddWithValue("@Name", bodyData.Name);
-                    sqlCommand.Parameters.AddWithValue("@Password", bodyData.Password);
-                    sqlCommand.Parameters.AddWithValue("@Email", bodyData.Email);
+                    cmd.Parameters.AddWithValue("@Name", bodyData.Name);
+                    cmd.Parameters.AddWithValue("@Password", bodyData.Password);
+                    cmd.Parameters.AddWithValue("@Email", bodyData.Email);
 
-                    bool success = Convert.ToBoolean(sqlCommand.ExecuteNonQuery()); // for execute above query
-                    if (success)
-                    {
-                        return Ok("user register successfull");
-                    }
-                    return BadRequest("failed");
+                    int rows = cmd.ExecuteNonQuery(); // returns number of inserted rows
+                    if (rows > 0)
+                        return Ok(new { message = "User registered successfully!", isSuccess = true });
+                    else
+                        return BadRequest(new { message = "Registration failed.", isSuccess = false });
                 }
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { message = ex.Message });
             }
         }
 
         [HttpPost("login1")]
-        public IActionResult Login([FromBody] Login bodyData) 
+        public IActionResult Login([FromBody] Login bodyData)
         {
             try
             {
-                string connectionString = "Server=localhost\\SQLEXPRESS02;Database=USERS_DB; integrated security=SSPI ;TrustServerCertificate=True;";
-
-                using (SqlConnection connection = new SqlConnection(connectionString))
+                using (SqlConnection con = new SqlConnection(connectionString))
                 {
-                    connection.Open();
+                    con.Open();
+                    string query = "SELECT COUNT(*) FROM USERS WHERE EMAIL = @Email AND PASSWORD = @Password";
+                    SqlCommand cmd = new SqlCommand(query, con);
+                    cmd.Parameters.AddWithValue("@Email", bodyData.Email);
+                    cmd.Parameters.AddWithValue("@Password", bodyData.Password);
 
-                    string sqls = "SELECT COUNT(*) FROM USERS WHERE PASSWORD = @Password AND EMAIL = @Email";
-                    SqlCommand sqlCommand = new SqlCommand(sqls, connection);
-                    sqlCommand.Parameters.AddWithValue("@Password", bodyData.Password);
-                    sqlCommand.Parameters.AddWithValue("@Email", bodyData.Email);
-
-                    bool success = Convert.ToBoolean(sqlCommand.ExecuteScalar()); // FOR single value execute
-                    if (success)
-                    {
-                        return Ok(new { message = "user Login successfull", isSuccess = true });
-                        // return Ok("user Login successfull");
-                    }
-                    return BadRequest(new { message = "invalid credentials", isSuccess = false });
-                    // return BadRequest("failed");
+                    int count = Convert.ToInt32(cmd.ExecuteScalar());
+                    if (count > 0)
+                        return Ok(new { message = "User login successful!", isSuccess = true });
+                    else
+                        return BadRequest(new { message = "Invalid email or password", isSuccess = false });
                 }
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { message = ex.Message });
             }
         }
     }
