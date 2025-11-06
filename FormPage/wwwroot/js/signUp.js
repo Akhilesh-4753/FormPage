@@ -1,44 +1,38 @@
-
-function fetchRegister(bdyData) {
-    try {
-        return $.ajax({
-            url: "/register",
-            type: "POST",
-            contentType: "application/json", // ✅ tell server you're sending JSON
-            dataType: "text",                // ✅ expect JSON in response
-            data: JSON.stringify(bdyData),  // ✅ convert JS object → JSON string
-            success: function (response) {
-                console.log("✅ Data sent successfully:", response);
-            },
-            error: function (xhr, status, error) {
-                console.error("❌ Error fetching data:", error);
-            }
-        });
-
-    }
-    catch (error)
-    {
-        console.log("error",error)
-    }
+// 🔹 Send Register Data
+function fetchRegister(data) {
+    return $.ajax({
+        url: "/register",
+        type: "POST",
+        contentType: "application/json",
+        dataType: "json",
+        data: JSON.stringify(data)
+    });
 }
-async function setRegister() {
-    debugger;
-    const $formSelector = $("form#signupForm");
 
-    const fname = $formSelector.find("#UsrName").val();
-    const UsrEmail = $formSelector.find("#UsrEmail").val();
-    const usrPswrd = $formSelector.find("#Usrpsswrd").val();
+$('#signupForm').on('submit', async function (e) {
+    e.preventDefault();
 
     const bdyData = {
-        Name: fname,
-        Email: UsrEmail,
-        Password: usrPswrd
+        Name: $('#UsrName').val(),
+        Email: $('#UsrEmail').val(),
+        Password: $('#Usrpsswrd').val()
+    };
+
+    try {
+        const response = await fetchRegister(bdyData);
+
+        Swal.fire({
+            title: "Registration Successful!",
+            text: response.message,
+            icon: "success",
+            confirmButtonText: "OK"
+        });
+    } catch (err) {
+        Swal.fire({
+            title: "Registration Failed!",
+            text: err.responseJSON?.message || "Something went wrong!",
+            icon: "error",
+            confirmButtonText: "Retry"
+        });
     }
-
-    const apiResult = await fetchRegister(bdyData);
-}
-
-$(document).on("submit", "#signupForm", function (e) {
-    e.preventDefault();
-    setRegister();
 });
