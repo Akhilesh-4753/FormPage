@@ -1,44 +1,35 @@
-function fetchLogin(bdyData) {
+// 🔹 Send Login Data
+function fetchLogin(data) {
     return $.ajax({
         url: "/login1",
         type: "POST",
-        contentType: "application/json", // tell server you're sending JSON
-        dataType: "json",  // expect JSON in response
-        data: JSON.stringify(bdyData)  // convert JS object → JSON string
+        contentType: "application/json",
+        dataType: "json",
+        data: JSON.stringify(data)
     });
 }
 
 $('#loginForm').on('submit', async function (e) {
     e.preventDefault();
 
-    const logEmail = $('#loginEmail').val();
-    const logPswrd = $('#loginPassword').val();
-
     const bdyData = {
-        Email: logEmail,
-        Password: logPswrd
+        Email: $('#loginEmail').val(),
+        Password: $('#loginPassword').val()
     };
 
     try {
         const response = await fetchLogin(bdyData);
 
-        // 🔹 check backend response
-        if (response.isSuccess || response.success || response === "User login successful") {
-            Swal.fire({
-                title: "Login Successful!",
-                text: "Welcome back, Akhilesh!",
-                icon: "success",
-                confirmButtonText: "OK"
-            });
-        }
-
-        console.log("✅ Server Response:", response);
-
-    } catch (error) {
-        console.error("❌ Login Request Failed:", error);
         Swal.fire({
-            title: "Server Error!",
-            text: "Unable to connect to server. Please try again later.",
+            title: "Login Successful!",
+            text: response.message,
+            icon: "success",
+            confirmButtonText: "OK"
+        });
+    } catch (err) {
+        Swal.fire({
+            title: "Login Failed!",
+            text: err.responseJSON?.message || "Invalid email or password.",
             icon: "error",
             confirmButtonText: "Retry"
         });
