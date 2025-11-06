@@ -1,54 +1,46 @@
-
 function fetchLogin(bdyData) {
-    try {
-        return $.ajax({
-            url: "/login1",
-            type: "POST",
-            contentType: "application/json", // ✅ tell server you're sending JSON
-            dataType: "text",                // ✅ expect JSON in response
-            data: JSON.stringify(bdyData),  // ✅ convert JS object → JSON string
-            success: function (response) {
-                console.log("✅ Data sent successfully:", response);
-            },
-            error: function (xhr, status, error) {
-                console.error("❌ Error fetching data:", error);
-            }
-        });
-
-    }
-    catch (error) {
-        console.log("error", error)
-    }
+    return $.ajax({
+        url: "/login1",
+        type: "POST",
+        contentType: "application/json", // tell server you're sending JSON
+        dataType: "json",  // expect JSON in response
+        data: JSON.stringify(bdyData)  // convert JS object → JSON string
+    });
 }
 
-async function setLogin() {
-    debugger;
-    const $formSelector = $("form#loginForm");
-    
-    const logEmail = $formSelector.find("#loginEmail").val();
-    const logPswrd = $formSelector.find("#loginPassword").val();
+$('#loginForm').on('submit', async function (e) {
+    e.preventDefault();
+
+    const logEmail = $('#loginEmail').val();
+    const logPswrd = $('#loginPassword').val();
 
     const bdyData = {
         Email: logEmail,
         Password: logPswrd
+    };
+
+    try {
+        const response = await fetchLogin(bdyData);
+
+        // 🔹 check backend response
+        if (response.isSuccess || response.success || response === "User login successful") {
+            Swal.fire({
+                title: "Login Successful!",
+                text: "Welcome back, Akhilesh!",
+                icon: "success",
+                confirmButtonText: "OK"
+            });
+        }
+
+        console.log("✅ Server Response:", response);
+
+    } catch (error) {
+        console.error("❌ Login Request Failed:", error);
+        Swal.fire({
+            title: "Server Error!",
+            text: "Unable to connect to server. Please try again later.",
+            icon: "error",
+            confirmButtonText: "Retry"
+        });
     }
-
-    const apiResult = await fetchLogin(bdyData);
-}
-
-$('#loginForm').on('submit', function (e) {
-    e.preventDefault();
-    var email = $('#loginEmail').val();
-    var password = $('#loginPassword').val();
-
-    setLogin();
-
-    Swal.fire({
-        title: "Login Successful!",
-        text: "Welcome back, Akhilesh!",
-        icon: "success",
-        confirmButtonText: "OK"
-    });
-
-    console.log('Login Details:', { email, password });
 });
